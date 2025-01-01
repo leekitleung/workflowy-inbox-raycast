@@ -1,7 +1,7 @@
 {
   "$schema": "https://www.raycast.com/schemas/extension.json",
-  "name": "workflowy-inbox",
-  "title": "Send to Workflowy Inbox",
+  "name": "workflowy-inbox-raycast",
+  "title": "Send to WF Inbox",
   "description": "Quickly add items to your Workflowy inbox. (This is an independent extension and is not created by Workflowy.)",
   "icon": "send-to-workflowy.png",
   "author": "cameron_pak",
@@ -12,9 +12,17 @@
   "commands": [
     {
       "name": "index",
-      "title": "Send to Workflowy Inbox",
-      "description": "Send a note, task, or link to your Workflowy inbox with ease.\n\nGet your API Key at https://workflowy.com/api-key/.",
-      "mode": "view"
+      "title": "Send to WF Inbox",
+      "description": "Send a note, task, or link to your Workflowy inbox with ease.",
+      "mode": "no-view",
+      "arguments": [
+        {
+          "name": "text",
+          "placeholder": "Type text to send to Workflowy...",
+          "type": "text",
+          "required": true
+        }
+      ]
     }
   ],
   "preferences": [
@@ -35,6 +43,15 @@
       "title": "Workflowy Save Location URL",
       "placeholder": "Enter your Workflowy save location URL",
       "required": true
+    },
+    {
+      "label": "Quick Tags",
+      "type": "textfield",
+      "description": "Enter your frequently used tags, separated by commas (e.g., #todo,#work,#later)",
+      "name": "quickTags",
+      "title": "Quick Tags",
+      "placeholder": "#todo,#work,#later",
+      "required": false
     }
   ],
   "dependencies": {

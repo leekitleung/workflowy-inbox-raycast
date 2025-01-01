@@ -1,53 +1,33 @@
-import {
-  Form,
-  ActionPanel,
-  Action,
-  showToast,
-  Toast,
-  getPreferenceValues,
-  openExtensionPreferences,
-  closeMainWindow,
-  PopToRootType,
-} from "@raycast/api";
-import { setTimeout } from "timers/promises";
-import { useForm, FormValidation } from "@raycast/utils";
+import { showToast, Toast, getPreferenceValues } from "@raycast/api";
 import { v4 as uuidv4 } from "uuid";
 import fetch from "cross-fetch";
-
-type InboxFormValues = {
-  new_bullet_title: string;
-  new_bullet_note: string;
-  api_key: string;
-  save_location_url: string;
-};
 
 interface Preferences {
   apiKey: string;
   saveLocationUrl: string;
+  quickTags?: string;
 }
 
-async function submitToWorkflowy(values: InboxFormValues): Promise<void> {
-  const { apiKey, saveLocationUrl } = getPreferenceValues<Preferences>();
-  const response = await fetch("https://beta.workflowy.com/api/bullets/create/", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${apiKey}`,
-    },
-    body: JSON.stringify({
-      new_bullet_id: uuidv4(),
-      new_bullet_title: values.new_bullet_title,
-      new_bullet_note: values.new_bullet_note,
-      save_location_url: saveLocationUrl,
-    }),
-  });
+interface Arguments {
+  text: string;
+}
 
-  const data = await response.json();
-  if (!data || !response.ok) {
-    throw new Error(
-      "Failed to submit the bullet to Workflowy. Please check your API key and save location url and then try again.",
-    );
-  }
+// 获取格式化的时间戳
+function getTimestamp(): string {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const day = String(now.getDate()).padStart(2, '0');
+  const hours = String(now.getHours()).padStart(2, '0');
+  const minutes = String(now.getMinutes()).padStart(2, '0');
+  
+  return `${year}-${month}-${day} ${hours}:${minutes}`;
+}
+
+// 从preferences获取标签
+function getQuickTags(): string {
+  const { quickTags } = getPreferenceValues<Preferences>();
+  return quickTags ? ` ${quickTags}` : '';
 }
 
 async function validateWfApiKey(): Promise<void> {
@@ -66,72 +46,48 @@ async function validateWfApiKey(): Promise<void> {
   }
 }
 
-export default function Command(): React.ReactElement {
-  const { handleSubmit, itemProps, reset } = useForm<InboxFormValues>({
-    async onSubmit(values) {
-      try {
-        await validateWfApiKey();
-        await submitToWorkflowy(values);
-        await showToast({
-          style: Toast.Style.Success,
-          title: "Success!",
-          message: "Added the bullet to your Workflowy inbox.",
-        });
-        reset();
-      } catch {
-        showToast({
-          style: Toast.Style.Failure,
-          title: "Error",
-          message:
-            "Failed to submit the bullet to Workflowy. Please check your API key and save location url and then try again.",
-        });
-      }
-    },
-    validation: {
-      new_bullet_title: FormValidation.Required,
-    },
-  });
-  const { saveLocationUrl } = getPreferenceValues<Preferences>();
+async function submitToWorkflowy(text: string): Promise<void> {
+  const { apiKey, saveLocationUrl } = getPreferenceValues<Preferences>();
+  const timestamp = getTimestamp();
+  const tags = getQuickTags();
+  const fullText = `${timestamp} ${text}${tags}`;
 
-  return (
-    <Form
-      actions={
-        <ActionPanel>
-          <Action.SubmitForm
-            icon={{ source: "send.svg" }}
-            title="Send and Close"
-            onSubmit={async (values) => {
-              await handleSubmit(values as InboxFormValues);
-              // This allows the success message to show for a second before closing the window.
-              await setTimeout(1000);
-              await closeMainWindow({ popToRootType: PopToRootType.Immediate });
-            }}
-          />
-          <Action.SubmitForm icon={{ source: "send.svg" }} title="Send and Add Another" onSubmit={handleSubmit} />
-          <Action.OpenInBrowser
-            icon={{ source: "key.svg" }}
-            title="Get Workflowy API Key"
-            url="https://workflowy.com/api-key/"
-          />
-          <Action.OpenInBrowser
-            icon={{ source: "inbox.svg" }}
-            title="Open Workflowy Inbox"
-            url={saveLocationUrl || ""}
-          />
-          <Action
-            icon={{ source: "settings.svg" }}
-            title="Open Extension Preferences"
-            onAction={openExtensionPreferences}
-          />
-        </ActionPanel>
-      }
-    >
-      <Form.TextField
-        title="Bullet Text"
-        placeholder="What would you like to remember?"
-        {...itemProps.new_bullet_title}
-      />
-      <Form.TextArea title="Bullet Note / Comment" placeholder="Any comments?" {...itemProps.new_bullet_note} />
-    </Form>
-  );
+  const response = await fetch("https://beta.workflowy.com/api/bullets/create/", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${apiKey}`,
+    },
+    body: JSON.stringify({
+      new_bullet_id: uuidv4(),
+      new_bullet_title: fullText,
+      save_location_url: saveLocationUrl,
+    }),
+  });
+
+  const data = await response.json();
+  if (!data || !response.ok) {
+    throw new Error(
+      "Failed to submit to Workflowy. Please check your API key and save location url."
+    );
+  }
+}
+
+export default async function Command(props: { arguments: Arguments }) {
+  const { text } = props.arguments;
+
+  try {
+    await validateWfApiKey();
+    await submitToWorkflowy(text);
+    await showToast({
+      style: Toast.Style.Success,
+      title: "Added to Workflowy",
+    });
+  } catch (error) {
+    showToast({
+      style: Toast.Style.Failure,
+      title: "Error",
+      message: error instanceof Error ? error.message : "Unknown error occurred",
+    });
+  }
 }
