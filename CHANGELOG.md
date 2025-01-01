@@ -1,17 +1,39 @@
-# workflowy-inbox Changelog
+# Send to Workflowy Inbox Changelog
 
-## 2024-03-09 - Updated Logo, Name, and Action
+## [2.0.0] - 2025-01-02
+Forked and modified by @current-author
 
-- Updated the logo from a sort-of Workflowy-branded logo to a custom one. _This
-  helps ensure it's clear that we are not affiliated with Workflowy._
+### Changed
+- Complete rewrite of the interface to use direct command input
+- Added automatic timestamp to each entry (YYYY-MM-DD HH:mm format)
+- Added configurable quick tags support
+- Simplified the UI by removing form interface
 
-- Updated the name to be "Send to Workflowy Inbox" versus "Workflowy Inbox" to
-  make it a little more clear that it adds content to an inbox rather than is an
-  inbox.
+### Added
+- Automatic timestamp prefix for all entries
+- Quick tags configuration in preferences
+- Automatic tag appending to entries
 
-- The main action of sending a note to workflowy will now close the window one
-  second after completion.
+### Technical Changes
+- Switched to no-view mode for direct input
+- Improved error handling and success notifications
+- Streamlined the submission process
 
-## [Initial Version] - 2024-02-28
+## [1.0.1] - 2024-03-09
+By @cameronapak
+- Updated the logo to a custom one (clarifying non-affiliation with Workflowy)
+- Renamed to "Send to Workflowy Inbox" for clarity
+- Added window auto-close after successful submission
 
-- Can add a note, task, or link to your Workflowy inbox with ease.
+## [1.0.0] - 2024-02-28
+Initial release by @cameronapak
+
+### Features
+- Basic note/task/link addition to Workflowy inbox
+- Workflowy API integration
+- Form-based input interface
+- API key and save location configuration
+
+---
+
+This extension is forked from [cameronapak/workflowy-inbox](https://github.com/cameronapak/workflowy-inbox) with significant modifications to the user interface and functionality.
